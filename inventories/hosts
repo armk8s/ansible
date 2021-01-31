@@ -1,5 +1,4 @@
-
-[armk8s:children]
+[armk8s:child]
 master
 node
 
