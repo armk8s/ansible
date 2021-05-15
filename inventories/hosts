@@ -1,0 +1,14 @@
+
+[armk8s:children]
+master
+node
+
+[master]
+master1.armk8s.net ansible_host=10.207.0.21
+master2.armk8s.net ansible_host=10.207.0.22
+master3.armk8s.net ansible_host=10.207.0.23
+
+[node]
+node1.armk8s.net ansible_host=10.207.0.51
+node2.armk8s.net ansible_host=10.207.0.52
+node3.armk8s.net ansible_host=10.207.0.53

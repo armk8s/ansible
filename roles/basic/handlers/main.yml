@@ -1,0 +1,15 @@
+---
+# handlers file for basic
+
+- name: restart timesyncd
+  systemd:
+    name: systemd-timesyncd
+    state: restarted
+
+- name: enable timesyncd
+  systemd:
+    name: systemd-timesyncd
+    enabled: yes
+
+- name: run timedatectl
+  command: timedatectl set-ntp true

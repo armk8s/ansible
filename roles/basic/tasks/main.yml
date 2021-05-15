@@ -1,0 +1,96 @@
+---
+# tasks file for basic
+
+- name: change timezone
+  timezone:
+    name: "{{ timezone }}"
+  tags:
+    - prepare
+    - basic
+    - timezone
+
+- name: set timedatectl
+  template:
+    src: timesyncd.conf.j2
+    dest: /etc/systemd/timesyncd.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart timesyncd
+    - enable timesyncd
+    - run timedatectl
+  tags:
+    - prepare
+    - basic
+    - time
+
+- name: update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  tags:
+    - prepare
+    - basic
+    - update
+
+- name: update all packages
+  apt:
+    upgrade: dist
+  tags:
+    - prepare
+    - basic
+    - update
+
+- name: install some required tools
+  apt:
+    name:
+      - ipset
+      - conntrack
+      - socat
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+  tags:
+    - prepare
+    - basic
+    - install
+
+- name: set hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+  tags:
+    - prepare
+    - basic
+    - hostname
+
+- name: set hostname to hosts file
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - prepare
+    - basic
+    - hosts
+
+- name: Check if a reboot is needed for Debian and Ubuntu boxes
+  register: reboot_required_file
+  stat:
+    path: /var/run/reboot-required
+    get_md5: no
+
+- name: Reboot the Debian or Ubuntu server
+  reboot:
+    msg: "Reboot initiated by Ansible due to kernel updates"
+    connect_timeout: 5
+    reboot_timeout: 300
+    pre_reboot_delay: 0
+    post_reboot_delay: 30
+    test_command: uptime
+  when: reboot_required_file.stat.exists
