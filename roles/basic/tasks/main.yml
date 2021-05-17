@@ -1,6 +1,14 @@
 ---
 # tasks file for basic
 
+- name: update host name
+  hostname:
+    name: "{{ inventory_hostname }}"
+  tags:
+    - prepare
+    - basic
+    - hostname
+
 - name: change timezone
   timezone:
     name: "{{ timezone }}"
@@ -78,6 +86,84 @@
     - prepare
     - basic
     - hosts
+
+- name: change password of the user
+  user:
+    name: "{{ ansible_ssh_user }}"
+    update_password: always
+    password: "{{ user_password|password_hash('sha512') }}"
+  when:
+    - user_password != ""
+  tags:
+    - prepare
+    - basic
+    - password
+
+- name: discover swap status
+  shell: cat /proc/swaps | wc -l
+  register: swap_out
+  tags:
+    - prepare
+    - basic
+    - swap
+
+- name: disable swap if enabled for non rpi hosts
+  shell: |
+    swapoff -a
+  when: 
+    - swap_out.stdout != "1"
+  tags:
+    - prepare
+    - basic
+    - swap
+
+- name: Enable IPv4 forwarding
+  sysctl:
+    name: "{{ item }}"
+    value: "1"
+    state: present
+    reload: yes
+  with_items:
+    - net.ipv4.ip_forward
+    - net.ipv6.conf.all.forwarding
+  tags:
+    - prepare
+    - basic
+    - forwarding
+
+- name: Activating cgroup support
+  lineinfile:
+    path: /boot/firmware/cmdline.txt
+    regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
+    line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1'
+    backrefs: true
+  tags:
+    - prepare
+    - basic
+    - cgroup
+
+- name: Flush iptables before changing to iptables-legacy
+  iptables:
+    flush: true
+  changed_when: false
+  tags:
+    - prepare
+    - basic
+    - iptables
+
+- name: use iptables-legacy
+  alternatives:
+    name: '{{ item.name }}'
+    path: '{{ item.path }}'
+  loop:
+    - name: iptables
+      path: /usr/sbin/iptables-legacy
+    - name: ip6tables
+      path: /usr/sbin/ip6tables-legacy
+  tags:
+    - prepare
+    - basic
+    - iptables
 
 - name: Check if a reboot is needed for Debian and Ubuntu boxes
   register: reboot_required_file
