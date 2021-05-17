@@ -1,0 +1,5 @@
+---
+# defaults file for vault
+
+vault_version: 1.6.3
+force_update: False

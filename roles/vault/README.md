@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 Role Name
-=======
-Basic Provisioning Step
->>>>>>> Update roles
 =========
 
 A brief description of the role goes here.
