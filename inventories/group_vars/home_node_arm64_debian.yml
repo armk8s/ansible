@@ -1,4 +1,0 @@
----
-ansible_ssh_user: root
-host_type: debian
-role: node

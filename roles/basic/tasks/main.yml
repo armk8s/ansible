@@ -1,39 +1,6 @@
 ---
 # tasks file for basic
 
-<<<<<<< HEAD
-- name: change timezone
-  timezone:
-    name: "{{ timezone }}"
-=======
-- name: update all packages to latest
-  apt:
-    name: "*"
-    state: latest
-  tags:
-    - prepare
-    - basic
-    - update
-
-- name: install some required package
-  apt:
-    name:
-      - socat
-      - ipset
-      - conntrack
-    state: latest
-  tags:
-    - prepare
-    - basic
-    - update
-
-- name: add hostname to /etc/hosts
-  lineinfile:
-    dest: /etc/hosts
-    line: "127.0.0.1 {{ inventory_hostname }} {{ inventory_hostname_short }}"
-    state: present
-  with_items: "{{ groups.all }}"
-
 - name: update host name
   hostname:
     name: "{{ inventory_hostname }}"
@@ -44,14 +11,12 @@
 
 - name: change timezone
   timezone:
-    name: "{{ host_timezone }}"
->>>>>>> Update roles
+    name: "{{ timezone }}"
   tags:
     - prepare
     - basic
     - timezone
 
-<<<<<<< HEAD
 - name: set timedatectl
   template:
     src: timesyncd.conf.j2
@@ -122,22 +87,6 @@
     - basic
     - hosts
 
-- name: Check if a reboot is needed for Debian and Ubuntu boxes
-  register: reboot_required_file
-  stat:
-    path: /var/run/reboot-required
-    get_md5: no
-
-- name: Reboot the Debian or Ubuntu server
-  reboot:
-    msg: "Reboot initiated by Ansible due to kernel updates"
-    connect_timeout: 5
-    reboot_timeout: 300
-    pre_reboot_delay: 0
-    post_reboot_delay: 30
-    test_command: uptime
-  when: reboot_required_file.stat.exists
-=======
 - name: change password of the user
   user:
     name: "{{ ansible_ssh_user }}"
@@ -158,25 +107,11 @@
     - basic
     - swap
 
-- name: disable swap if enabled for rpi hosts
-  shell: |
-    dphys-swapfile swapoff
-    dphys-swapfile uninstall
-    systemctl disable dphys-swapfile
-  when: 
-    - swap_out.stdout != "1"
-    - host_type == "rpi"
-  tags:
-    - prepare
-    - basic
-    - swap
-
 - name: disable swap if enabled for non rpi hosts
   shell: |
     swapoff -a
   when: 
     - swap_out.stdout != "1"
-    - host_type != "rpi"
   tags:
     - prepare
     - basic
@@ -198,12 +133,10 @@
 
 - name: Activating cgroup support
   lineinfile:
-    path: /boot/cmdline.txt
+    path: /boot/firmware/cmdline.txt
     regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
-    line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
+    line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1'
     backrefs: true
-  when:
-    - host_type == "rpi"
   tags:
     - prepare
     - basic
@@ -232,13 +165,18 @@
     - basic
     - iptables
 
-- name: Reboot the server
+- name: Check if a reboot is needed for Debian and Ubuntu boxes
+  register: reboot_required_file
+  stat:
+    path: /var/run/reboot-required
+    get_md5: no
+
+- name: Reboot the Debian or Ubuntu server
   reboot:
-    test_command: 'uptime'
-  when:
-    - required_reboot
-  tags:
-    - finish
-    - basic
-    - reboot
->>>>>>> Update roles
+    msg: "Reboot initiated by Ansible due to kernel updates"
+    connect_timeout: 5
+    reboot_timeout: 300
+    pre_reboot_delay: 0
+    post_reboot_delay: 30
+    test_command: uptime
+  when: reboot_required_file.stat.exists

@@ -1,6 +1,5 @@
 ---
 # handlers file for basic
-<<<<<<< HEAD
 
 - name: restart timesyncd
   systemd:
@@ -14,5 +13,3 @@
 
 - name: run timedatectl
   command: timedatectl set-ntp true
-=======
->>>>>>> Update roles

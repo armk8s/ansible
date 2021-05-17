@@ -1,13 +1,9 @@
 ---
 # defaults file for basic
 
-<<<<<<< HEAD
 timezone: Asia/Jakarta
 timeservers:
   - 10.217.0.11
   - 10.217.0.12
-=======
+
 user_password: ""
-host_timezone: "Asia/Jakarta"
-required_reboot: False
->>>>>>> Update roles

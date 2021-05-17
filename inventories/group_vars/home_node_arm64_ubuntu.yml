@@ -1,4 +1,0 @@
----
-ansible_ssh_user: ubuntu
-host_type: ubuntu
-role: node
