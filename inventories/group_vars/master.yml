@@ -1,0 +1,4 @@
+---
+ansible_ssh_user: debian
+role: master
+host_type: amd64

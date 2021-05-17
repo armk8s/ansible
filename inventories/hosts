@@ -1,13 +1,56 @@
-[k8s:child]
+[etcd:children]
+etcd_main
+etcd_events
+
+[k8s:children]
 master
 node
 
-[master]
-master1.armk8s.net ansible_host=10.217.0.11
-master2.armk8s.net ansible_host=10.217.0.12
-master3.armk8s.net ansible_host=10.217.0.13
+[etcd_main]
+etcd-1.armk8s.net ansible_host=10.217.0.132
+etcd-2.armk8s.net ansible_host=10.217.0.133
+etcd-3.armk8s.net ansible_host=10.217.0.134
 
-[node]
-node1.armk8s.net ansible_host=10.217.0.21
-node2.armk8s.net ansible_host=10.217.0.22
-node3.armk8s.net ansible_host=10.217.0.23
+[etcd_events]
+etcd-events-1.armk8s.net ansible_host=10.217.0.135
+etcd-events-2.armk8s.net ansible_host=10.217.0.136
+etcd-events-3.armk8s.net ansible_host=10.217.0.137
+
+[etcd_events]
+
+[master]
+master-1.armk8s.net ansible_host=10.217.0.108
+master-2.armk8s.net ansible_host=10.217.0.107
+master-3.armk8s.net ansible_host=10.217.0.106
+
+[node:children]
+home_node_arm64_ubuntu
+home_node_amd64
+tuisda_node
+
+[home_node_arm64_ubuntu]
+node-pi-1.armk8s.net ansible_host=10.207.0.21
+node-pi-2.armk8s.net ansible_host=10.207.0.22
+node-pi-3.armk8s.net ansible_host=10.207.0.23
+
+[home_node_arm64_debian]
+node-rock-1.armk8s.net ansible_host=10.207.0.31
+node-rock-2.armk8s.net ansible_host=10.207.0.32
+node-rock-3.armk8s.net ansible_host=10.207.0.33
+
+[home_node_amd64]
+node-1.armk8s.net ansible_host=10.217.0.141
+node-2.armk8s.net ansible_host=10.217.0.142
+node-3.armk8s.net ansible_host=10.217.0.143
+
+[tuisda_node]
+node-tuisda-pi-1.armk8s.net ansible_host=172.33.10.11
+node-tuisda-pi-2.armk8s.net ansible_host=172.33.10.12
+node-tuisda-pi-3.armk8s.net ansible_host=172.33.10.13
+node-tuisda-pi-4.armk8s.net ansible_host=172.33.10.14
+node-tuisda-pi-5.armk8s.net ansible_host=172.33.10.15
+
+[vault]
+vault1.armk8s.net ansible_host=10.217.0.127
+vault2.armk8s.net ansible_host=10.217.0.126
+vault3.armk8s.net ansible_host=10.217.0.128

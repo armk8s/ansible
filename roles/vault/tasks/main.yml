@@ -1,0 +1,100 @@
+---
+# tasks file for vault
+
+- name: make sure to update all packages
+  apt:
+    name: "*"
+    state: latest
+  tags:
+    - prepare
+    - vault
+    - install
+
+- name: install pre-requisite package
+  apt:
+    name: unzip
+    state: latest
+  tags:
+    - vault
+    - install
+
+
+- name: update host name
+  hostname:
+    name: "{{ inventory_hostname }}"
+  tags:
+    - prepare
+    - vault
+    - hostname
+
+- name: create all required directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - /etc/vault
+    - /var/log/vault
+    - /var/lib/vault
+
+- name: check if vault exists
+  shell: |
+    /usr/local/bin/vault -v > /dev/null 2>&1
+  register: vault_installed
+  ignore_errors: true
+  tags:
+    - setup
+
+- name: download vault
+  get_url:
+    url: https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_linux_amd64.zip
+    dest: /tmp/vault_{{ vault_version }}_linux_amd64.zip
+  when:
+    - vault_installed.rc != 0 or force_update
+
+- name: extract vault
+  unarchive:
+    src: /tmp/vault_{{ vault_version }}_linux_amd64.zip
+    dest: /tmp
+    remote_src: yes
+  when:
+    - vault_installed.rc != 0 or force_update
+
+- name: copy vault
+  copy:
+    src: /tmp/vault
+    dest: /usr/local/bin/vault
+    remote_src: yes
+    owner: root
+    group: root
+    mode: 0700
+  when:
+    - vault_installed.rc != 0 or force_update
+
+- name: copy vault config file
+  template:
+    src: config.json.j2
+    dest: /etc/vault/config.json
+  tags:
+    - vault
+    - config
+
+- name: copy vault service file
+  template:
+    src: vault.service.j2
+    dest: /etc/systemd/system/vault.service
+  tags:
+    - vault
+    - config
+
+- name: daemon reload
+  systemd:
+    daemon_reload: yes
+
+- name: enable and restart vault service
+  systemd:
+    name: vault
+    state: restarted
+    enabled: yes
