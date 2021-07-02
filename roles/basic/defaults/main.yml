@@ -5,3 +5,5 @@ timezone: Asia/Jakarta
 timeservers:
   - 10.217.0.11
   - 10.217.0.12
+
+user_password: ""
