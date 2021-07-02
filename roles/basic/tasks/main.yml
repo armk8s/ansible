@@ -53,6 +53,9 @@
       - curl
       - gnupg
       - lsb-release
+      - containerd
+      - net-tools
+      - dnsutils
     state: present
   tags:
     - prepare
