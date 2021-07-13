@@ -1,0 +1,74 @@
+---
+# tasks file for kubernetes master - kube-controller-manager
+
+- name: copy kube-controller-manager certificate
+  copy:
+    src: files/certs/master/kube-controller-manager/{{ item }}
+    dest: /var/lib/kubernetes/pki/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - kube-controller-manager.crt
+    - kube-controller-manager.key
+  tags:
+    - kubernetes
+    - master
+    - kube-controller-manager
+
+- name: generate kube-controller-manager configuration
+  shell: |
+    /usr/local/bin/kubectl config set-cluster {{ cluster_name }} \
+      --certificate-authority=/var/lib/kubernetes/pki/ca.crt \
+      --embed-certs=true \
+      --server=https://127.0.0.1:443 \
+      --kubeconfig=/var/lib/kubernetes/kube-controller-manager/kubeconfig
+
+    /usr/local/bin/kubectl config set-credentials system:kube-controller-manager \
+      --client-certificate=/var/lib/kubernetes/pki/kube-controller-manager.crt \
+      --client-key=/var/lib/kubernetes/pki/kube-controller-manager.key \
+      --embed-certs=true \
+      --kubeconfig=/var/lib/kubernetes/kube-controller-manager/kubeconfig
+
+    /usr/local/bin/kubectl config set-context default \
+      --cluster={{ cluster_name }} \
+      --user=system:kube-controller-manager \
+      --kubeconfig=/var/lib/kubernetes/kube-controller-manager/kubeconfig
+
+    /usr/local/bin/kubectl config use-context default --kubeconfig=/var/lib/kubernetes/kube-controller-manager/kubeconfig
+  changed_when: false
+  tags:
+    - kubernetes
+    - master
+    - kube-controller-manager
+
+- name: copy kube-controller-manager service file
+  template:
+    src: master/service/kube-controller-manager.service.j2
+    dest: /etc/systemd/system/kube-controller-manager.service
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - master
+    - kube-controller-manager
+
+- name: do daemon reload
+  systemd:
+    name: kube-controller-manager
+    daemon_reload: yes
+  tags:
+    - kubernetes
+    - master
+    - kube-controller-manager
+
+- name: enable and restart kube-controller-manager
+  systemd:
+    name: kube-controller-manager
+    state: restarted
+    enabled: yes
+  tags:
+    - kubernetes
+    - master
+    - kube-controller-manager

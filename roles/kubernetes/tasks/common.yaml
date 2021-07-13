@@ -15,8 +15,24 @@
 
 - name: add ipvs to kernel
   modprobe:
-    name: ip_vs
+    name: "{{ item }}"
     state: present
+  with_items:
+    - ip_vs
+    - br_netfilter
+    - overlay
+  tags:
+    - kubernetes
+    - common
+    - always
+
+- name: add option to kernel
+  copy:
+    src: files/config/sysctl.conf
+    dest: /etc/sysctl.d/k8s.conf
+    owner: root
+    group: root
+    mode: 0755
   tags:
     - kubernetes
     - common

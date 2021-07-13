@@ -138,3 +138,11 @@
     - kubernetes
     - master
     - kube-apiserver
+
+- name: run kube-controller-manager tasks
+  include_tasks:
+    file: master/kube-controller-manager.yaml
+  tags:
+    - kubernetes
+    - master
+    - kube-controller-manager
