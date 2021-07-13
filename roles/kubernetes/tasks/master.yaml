@@ -1,0 +1,6 @@
+---
+# tasks file for kubernetes master
+
+- name: debug message
+  debug:
+    msg: "running master"

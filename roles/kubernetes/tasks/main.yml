@@ -1,0 +1,8 @@
+---
+# tasks file for kubernetes
+
+- name: load respective tasks
+  include_tasks:
+    file: "{{ role }}.yaml"
+  tags:
+    - always
