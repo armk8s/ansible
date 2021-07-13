@@ -1,0 +1,25 @@
+{
+    "CN": "{{ inventory_hostname }}",
+    "hosts": [
+{% for server in vars['play_hosts'] %}
+        "{{ hostvars[server].ansible_host }}",
+        "{{ hostvars[server].ansible_hostname }}",
+        "{{ hostvars[server].ansible_fqdn }}",
+{% endfor %}
+        "127.0.0.1",
+        "localhost"
+    ],
+    "key": {
+        "algo": "ecdsa",
+        "size": 521
+    },
+    "names": [
+        {
+            "C": "ID",
+            "L": "Bandung",
+            "O": "etcd",
+            "OU": "armk8s.net",
+            "ST": "Jawa Barat"
+        }
+    ]
+}

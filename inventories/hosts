@@ -3,11 +3,11 @@ master
 node
 
 [master]
-master1.armk8s.net ansible_host=10.207.0.21
-master2.armk8s.net ansible_host=10.207.0.22
-master3.armk8s.net ansible_host=10.207.0.23
+master1.armk8s.net ansible_host=10.77.30.11
+master2.armk8s.net ansible_host=10.77.30.12
+master3.armk8s.net ansible_host=10.77.30.13
 
 [node]
-node1.armk8s.net ansible_host=10.207.0.51
-node2.armk8s.net ansible_host=10.207.0.52
-node3.armk8s.net ansible_host=10.207.0.53
+node1.armk8s.net ansible_host=10.77.30.31
+node2.armk8s.net ansible_host=10.77.30.32
+node3.armk8s.net ansible_host=10.77.30.33

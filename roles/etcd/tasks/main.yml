@@ -1,2 +1,189 @@
 ---
 # tasks file for etcd
+
+- name: install cfssl component
+  apt:
+    name:
+      - golang-cfssl
+    state: present
+  tags:
+    - etcd
+    - prepare
+    - always
+
+- name: create etcd group
+  group:
+    name: etcd
+  tags:
+    - etcd
+    - prepare
+    - group
+    - always
+
+- name: create etcd user
+  user:
+    name: etcd
+    shell: /bin/nologin
+    groups: etcd
+    append: yes
+    create_home: no
+  tags:
+    - etcd
+    - prepare
+    - user
+    - always
+
+- name: create required directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: etcd
+    group: etcd
+    mode: 0755
+  with_items:
+    - /etc/etcd/certs/ca
+    - /etc/etcd/certs/client
+    - /etc/etcd/certs/peer
+    - /etc/etcd/certs/server
+    - /var/lib/etcd
+  tags:
+    - etcd
+    - prepare
+    - always
+
+- name: copy ca files
+  copy:
+    src: "files/ca/{{ item }}"
+    dest: /etc/etcd/certs/ca/{{ item }}
+    owner: etcd
+    group: etcd
+    mode: 0755
+  with_items:
+    - ca.crt
+    - ca.key
+    - config.json
+  tags:
+    - etcd
+    - prepare
+    - always
+
+- name: copy certificate config files
+  template:
+    src: "config/{{ item }}.json.j2"
+    dest: /etc/etcd/certs/{{ item }}/config.json
+    owner: etcd
+    group: etcd
+    mode: 0755
+  with_items:
+    - server
+    - peer
+    - client
+  tags:
+    - etcd
+    - prepare
+    - certificate
+
+- name: generate etcd certificate
+  shell: >
+    set -o pipefail && \
+    /usr/bin/cfssl gencert \
+      -ca=/etc/etcd/certs/ca/ca.crt \
+      -ca-key=/etc/etcd/certs/ca/ca.key \
+      -config=/etc/etcd/certs/ca/config.json \
+      -profile={{ item }} \
+      /etc/etcd/certs/{{ item }}/config.json | /usr/bin/cfssljson -bare /etc/etcd/certs/{{ item }}/{{ item }}
+  with_items:
+    - server
+    - peer
+    - client
+  args:
+    executable: /bin/bash
+  changed_when: false
+  tags:
+    - etcd
+    - prepare
+    - certificate
+
+- name: move etcd certificate
+  shell: |
+    set -o pipefail && \
+    /usr/bin/mv /etc/etcd/certs/{{ item }}/{{ item }}.pem /etc/etcd/certs/{{ item }}/{{ item }}.crt
+    /usr/bin/mv /etc/etcd/certs/{{ item }}/{{ item }}-key.pem /etc/etcd/certs/{{ item }}/{{ item }}.key
+  with_items:
+    - server
+    - peer
+    - client
+  args:
+    executable: /bin/bash
+  changed_when: false
+  tags:
+    - etc
+    - prepare
+    - certificate
+
+- name: download etcd binary
+  get_url:
+    url: https://github.com/etcd-io/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-arm64.tar.gz
+    dest: /tmp/etcd-{{ etcd_version }}-linux-arm64.tar.gz
+  tags:
+    - etcd
+    - install
+
+- name: extract etcd binary
+  unarchive:
+    src: /tmp/etcd-{{ etcd_version }}-linux-arm64.tar.gz
+    dest: /tmp/
+    remote_src: yes
+  tags:
+    - etcd
+    - install
+
+- name: copy etcd binary files
+  copy:
+    src: /tmp/etcd-{{ etcd_version }}-linux-arm64/{{ item }}
+    dest: /usr/local/bin/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+    remote_src: yes
+  with_items:
+    - etcd
+    - etcdctl
+  tags:
+    - etcd
+    - install
+
+- name: copy etcd service files
+  template:
+    src: etcd/etcd.service.j2
+    dest: /etc/systemd/system/etcd.service
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - etcd
+    - config
+
+- name: daemon reload
+  systemd:
+    name: etcd
+    daemon_reload: true
+
+- name: restart and enable etcd service
+  systemd:
+    name: etcd
+    state: restarted
+    enabled: yes
+  tags:
+    - etcd
+    - config
+    - always
+
+- name: clean up unused files
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/etcd/certs/ca/ca.key
+    - /tmp/etcd-{{ etcd_version }}-linux-arm64
+    - /tmp/etcd-{{ etcd_version }}-linux-arm64.tar.gz
