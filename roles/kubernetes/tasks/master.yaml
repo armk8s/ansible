@@ -3,4 +3,138 @@
 
 - name: debug message
   debug:
-    msg: "running master"
+    msg: "provisioning kubernetes master"
+
+- name: download master tools
+  get_url:
+    url: https://dl.k8s.io/release/{{ kubernetes_version }}/bin/linux/arm64/{{ item }}
+    dest: /usr/local/bin/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+  tags:
+    - kubernetes
+    - master
+    - prepare
+
+- name: create required directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - /etc/kubernetes/manifests
+    - /var/lib/kubernetes
+    - /var/lib/kubernetes/pki
+    - /var/lib/kubernetes/kube-apiserver
+    - /var/lib/kubernetes/kube-controller-manager
+    - /var/lib/kubernetes/kube-scheduler
+    - /var/lib/kubernetes/etcd
+    - /var/lib/kubernetes/front-proxy
+  tags:
+    - kubernetes
+    - master
+    - prepare
+
+- name: copy kubernetes ca
+  copy:
+    src: files/certs/ca/{{ item }}
+    dest: /var/lib/kubernetes/pki/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - ca.crt
+    - ca.key
+  tags:
+    - kubernetes
+    - master
+    - ca
+
+- name: copy front-proxy kubernetes ca
+  copy:
+    src: files/certs/master/front-proxy-ca/{{ item }}
+    dest: /var/lib/kubernetes/pki/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - front-proxy-ca.crt
+    - front-proxy-ca.key
+  tags:
+    - kubernetes
+    - master
+    - ca
+
+- name: copy etcd kubernetes ca
+  copy:
+    src: files/certs/master/etcd-ca/{{ item }}
+    dest: /var/lib/kubernetes/pki/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - etcd-ca.crt
+  tags:
+    - kubernetes
+    - master
+    - ca
+
+- name: copy front-proxy certificate
+  copy:
+    src: files/certs/master/front-proxy/{{ item }}
+    dest: /var/lib/kubernetes/pki/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - front-proxy.crt
+    - front-proxy.key
+  tags:
+    - kubernetes
+    - master
+    - front-proxy
+
+- name: copy etcd client certificate
+  copy:
+    src: files/certs/master/etcd/{{ item }}
+    dest: /var/lib/kubernetes/pki/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - etcd-client.crt
+    - etcd-client.key
+  tags:
+    - kubernetes
+    - master
+    - etcd
+
+- name: copy service account certificate
+  copy:
+    src: files/certs/master/service-account/{{ item }}
+    dest: /var/lib/kubernetes/pki/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - service-account.crt
+    - service-account.key
+  tags:
+    - kubernetes
+    - master
+    - service-account
+
+- name: run kube-apiserver tasks
+  include_tasks:
+    file: master/kube-apiserver.yaml
+  tags:
+    - kubernetes
+    - master
+    - kube-apiserver

@@ -1,0 +1,60 @@
+---
+# tasks file for kubernetes master - kube-apiserver
+
+- name: copy kube-apiserver certificate
+  copy:
+    src: files/certs/master/kube-apiserver/{{ item }}
+    dest: /var/lib/kubernetes/pki/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - kube-apiserver.crt
+    - kube-apiserver.key
+  tags:
+    - kubernetes
+    - master
+    - kube-apiserver
+
+- name: copy encryption config
+  copy:
+    src: files/config/encryption.yaml
+    dest: /var/lib/kubernetes/kube-apiserver/encryption.yaml
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - master
+    - kube-apiserver
+
+- name: copy kube-apiserver services
+  template:
+    src: master/service/kube-apiserver.service.j2
+    dest: /etc/systemd/system/kube-apiserver.service
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - master
+    - kube-apiserver
+
+- name: do daemon reload
+  systemd:
+    name: kube-apiserver
+    daemon_reload: yes
+  tags:
+    - kubernetes
+    - master
+    - kube-apiserver
+
+- name: enable and restart kube-apiserver service
+  systemd:
+    name: kube-apiserver
+    state: restarted
+    enabled: yes
+  tags:
+    - kubernetes
+    - master
+    - kube-apiserver

@@ -1,0 +1,35 @@
+---
+# tasks file for kubernetes common
+
+- name: install required packages
+  apt:
+    name:
+      - ipset
+      - conntrack
+      - ipvsadm
+    state: present
+  tags:
+    - kubernetes
+    - common
+    - always
+
+- name: add ipvs to kernel
+  modprobe:
+    name: ip_vs
+    state: present
+  tags:
+    - kubernetes
+    - common
+    - always
+
+- name: download kubectl tools
+  get_url:
+    url: https://dl.k8s.io/release/{{ kubernetes_version }}/bin/linux/arm64/kubectl
+    dest: /usr/local/bin/kubectl
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - common
+    - always

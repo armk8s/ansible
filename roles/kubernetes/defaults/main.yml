@@ -1,4 +1,11 @@
 ---
 # defaults file for kubernetes
 
+kubernetes_version: v1.21.2
 role: node
+
+# etcd config
+etcd_servers:
+  - https://master1.armk8s.net:4000
+  - https://master2.armk8s.net:4000
+  - https://master3.armk8s.net:4000
