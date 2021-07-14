@@ -1,6 +1,17 @@
 ---
 # tasks file for kubernetes common
 
+- name: create required directory
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /etc/containerd
+  tags:
+    - kubernetes
+    - common
+    - always
+
 - name: install required packages
   apt:
     name:
@@ -45,6 +56,79 @@
     owner: root
     group: root
     mode: 0755
+  tags:
+    - kubernetes
+    - common
+    - always
+
+- name: install required package for docker-ce
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+  tags:
+    - kubernetes
+    - common
+    - always
+
+- name: add docker-ce apt key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    keyring: /usr/share/keyrings/docker-archive-keyring.gpg
+    state: present
+  tags:
+    - kubernetes
+    - common
+    - always
+
+- name: add docker-ce repository
+  apt_repository:
+    repo: deb [arch=arm64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu "{{ ansible_lsb['codename'] }}" stable
+    state: present
+    filename: docker
+  tags:
+    - kubernetes
+    - common
+    - always
+
+- name: update apt cache
+  apt:
+    update_cache: yes
+  tags:
+    - kubernetes
+    - common
+    - always
+
+- name: install containerd
+  apt:
+    name: containerd.io
+    state: present
+  tags:
+    - kubernetes
+    - common
+    - always
+
+- name: copy containerd config
+  copy:
+    src: files/config/containerd.toml
+    dest: /etc/containerd/config.toml
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - common
+    - always
+
+- name: enable and restart containerd
+  systemd:
+    name: containerd
+    state: restarted
+    enabled: yes
   tags:
     - kubernetes
     - common

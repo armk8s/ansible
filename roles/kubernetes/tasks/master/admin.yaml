@@ -1,0 +1,43 @@
+---
+# tasks file for kubernetes master - admin
+
+- name: copy admin certificate
+  copy:
+    src: files/certs/master/admin/{{ item }}
+    dest: /var/lib/kubernetes/pki/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - admin.crt
+    - admin.key
+  tags:
+    - kubernetes
+    - master
+    - admin
+
+- name: generate admin configuration
+  shell: |
+    /usr/local/bin/kubectl config set-cluster {{ cluster_name }} \
+      --certificate-authority=/var/lib/kubernetes/pki/ca.crt \
+      --embed-certs=true \
+      --server=https://127.0.0.1:443 \
+      --kubeconfig=/root/.kube/config
+
+    /usr/local/bin/kubectl config set-credentials admin \
+      --client-certificate=/var/lib/kubernetes/pki/admin.crt \
+      --client-key=/var/lib/kubernetes/pki/admin.key \
+      --embed-certs=true \
+      --kubeconfig=/root/.kube/config
+
+    /usr/local/bin/kubectl config set-context default \
+      --cluster={{ cluster_name }} \
+      --user=admin \
+      --kubeconfig=/root/.kube/config
+
+    /usr/local/bin/kubectl config use-context default --kubeconfig=/root/.kube/config
+  changed_when: false
+  tags:
+    - kubernetes
+    - master
+    - admin

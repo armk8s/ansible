@@ -3,4 +3,19 @@
 
 - name: debug message
   debug:
-    msg: "running node"
+    msg: "provisioning kubernetes node"
+
+- name: download node tools
+  get_url:
+    url: https://dl.k8s.io/release/{{ kubernetes_version }}/bin/linux/arm64/{{ item }}
+    dest: /usr/local/bin/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - kube-proxy
+    - kubelet
+  tags:
+    - kubernetes
+    - node
+    - prepare
