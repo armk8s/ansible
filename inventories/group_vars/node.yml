@@ -1,4 +1,8 @@
 ---
 ansible_ssh_user: ubuntu
 role: node
-host_type: arm64
+node_role: node
+host_type: amd64
+
+node_labels:
+  - node-role.kubernetes.io/node=

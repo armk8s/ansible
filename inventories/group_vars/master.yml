@@ -1,4 +1,12 @@
 ---
 ansible_ssh_user: ubuntu
 role: master
+node_role: master
 host_type: amd64
+
+node_labels:
+  - node-role.kubernetes.io/master=
+  - node-role.kubernetes.io/control-plane=
+
+node_taints:
+  - node-role.kubernetes.io/master=:NoSchedule

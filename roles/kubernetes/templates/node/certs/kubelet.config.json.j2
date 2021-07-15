@@ -1,0 +1,21 @@
+{
+    "CN": "system:node:{{ ansible_fqdn }}",
+    "hosts": [
+        "{{ ansible_host }}",
+        "{{ ansible_hostname }}",
+        "{{ ansible_fqdn }}"
+    ],
+    "key": {
+        "algo": "ecdsa",
+        "size": 521
+    },
+    "names": [
+        {
+            "C": "ID",
+            "L": "Bandung",
+            "O": "system:nodes",
+            "ST": "Jawa Barat",
+            "OU": "armk8s.net"
+        }
+    ]
+}

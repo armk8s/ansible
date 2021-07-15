@@ -19,3 +19,110 @@
     - kubernetes
     - node
     - prepare
+
+- name: create required directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - /etc/cni/net.d
+    - /opt/cni/bin
+    - /var/lib/kubernetes/kubelet
+    - /var/lib/kubernetes/kube-proxy
+    - /var/run/kubernetes
+  tags:
+    - kubernetes
+    - node
+    - prepare
+
+- name: copy loopback cni config
+  template:
+    src: node/cni/net.d/loopback.conf
+    dest: /etc/cni/net.d/99-loopback.conf
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - node
+    - prepare
+
+- name: download cni plugins
+  get_url:
+    url: https://github.com/containernetworking/plugins/releases/download/{{ cni_plugins_version }}/cni-plugins-linux-arm64-{{ cni_plugins_version }}.tgz
+    dest: /tmp/cni-plugins-linux-arm64-{{ cni_plugins_version }}.tgz
+  tags:
+    - kubernetes
+    - node
+    - cni
+
+- name: extract cni plugins
+  unarchive:
+    src: /tmp/cni-plugins-linux-arm64-{{ cni_plugins_version }}.tgz
+    dest: /opt/cni/bin/
+    remote_src: yes
+  tags:
+    - kubernetes
+    - node
+    - cni
+
+- name: copy kubernetes ca
+  copy:
+    src: files/certs/ca/{{ item }}
+    dest: /tmp/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - ca.crt
+    - ca.key
+    - config.json
+  tags:
+    - kubernetes
+    - master
+    - ca
+
+- name: copy kubernetes ca certs
+  copy:
+    src: files/certs/ca/ca.crt
+    dest: /var/lib/kubernetes/kubelet/ca.crt
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - master
+    - ca
+
+- name: load kubelet tasks
+  include_tasks:
+    file: node/kubelet.yaml
+  tags:
+    - kubernetes
+    - node
+    - kubelet
+
+- name: load kube-proxy tasks
+  include_tasks:
+    file: node/kube-proxy.yaml
+  tags:
+    - kubernetes
+    - node
+    - kubelet
+
+- name: remove ca certs
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /tmp/ca.crt
+    - /tmp/ca.key
+    - /tmp/config.json
+  tags:
+    - kubernetes
+    - node
+    - always
+    - cleanup

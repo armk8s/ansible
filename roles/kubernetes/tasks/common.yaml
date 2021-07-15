@@ -5,6 +5,9 @@
   file:
     path: "{{ item }}"
     state: directory
+    owner: root
+    group: root
+    mode: 0755
   with_items:
     - /etc/containerd
   tags:
@@ -18,6 +21,8 @@
       - ipset
       - conntrack
       - ipvsadm
+      - socat
+      - golang-cfssl
     state: present
   tags:
     - kubernetes
