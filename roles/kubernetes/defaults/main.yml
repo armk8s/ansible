@@ -9,7 +9,7 @@ node_labels: []
 node_taints: []
 
 cluster_cidr: 10.200.0.0/16
-service_ip_cluster_range: 10.196.0.0/16
+service_cluster_ip_range: 10.196.0.0/16
 cluster_dns: 10.196.0.10
 
 kubernetes_master_endpoint: api.armk8s.net

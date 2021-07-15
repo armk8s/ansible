@@ -20,7 +20,7 @@ ExecStart=/usr/local/bin/kube-apiserver \
   --kubelet-certificate-authority=/var/lib/kubernetes/pki/ca.crt \
   --kubelet-client-certificate=/var/lib/kubernetes/pki/kube-apiserver.crt \
   --kubelet-client-key=/var/lib/kubernetes/pki/kube-apiserver.key \
-  --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname \
+  --kubelet-preferred-address-types=Hostname,InternalIP,ExternalIP \
   --proxy-client-cert-file=/var/lib/kubernetes/pki/front-proxy.crt \
   --proxy-client-key-file=/var/lib/kubernetes/pki/front-proxy.key \
   --requestheader-allowed-names=front-proxy-client \
@@ -42,4 +42,3 @@ RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
-EOF

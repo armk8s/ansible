@@ -116,6 +116,7 @@
 
 - name: label the node
   shell: |
+    sleep 120 && \
     /usr/local/bin/kubectl label nodes --overwrite {{ ansible_fqdn }} {{ item }}
   with_items:
     - "{{ node_labels }}"

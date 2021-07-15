@@ -28,6 +28,7 @@
     group: root
     mode: 0755
   with_items:
+    - /root/.kube/
     - /etc/cni/net.d
     - /opt/cni/bin
     - /var/lib/kubernetes/kubelet
@@ -97,6 +98,47 @@
     - master
     - ca
 
+- name: copy admin certificate
+  copy:
+    src: files/certs/master/admin/{{ item }}
+    dest: /tmp/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - admin.crt
+    - admin.key
+  tags:
+    - kubernetes
+    - master
+    - admin
+
+- name: generate admin configuration
+  shell: |
+    /usr/local/bin/kubectl config set-cluster {{ cluster_name }} \
+      --certificate-authority=/tmp/ca.crt \
+      --embed-certs=true \
+      --server=https://{{ kubernetes_master_endpoint }}:443 \
+      --kubeconfig=/root/.kube/config
+
+    /usr/local/bin/kubectl config set-credentials admin \
+      --client-certificate=/tmp/admin.crt \
+      --client-key=/tmp/admin.key \
+      --embed-certs=true \
+      --kubeconfig=/root/.kube/config
+
+    /usr/local/bin/kubectl config set-context default \
+      --cluster={{ cluster_name }} \
+      --user=admin \
+      --kubeconfig=/root/.kube/config
+
+    /usr/local/bin/kubectl config use-context default --kubeconfig=/root/.kube/config
+  changed_when: false
+  tags:
+    - kubernetes
+    - master
+    - admin
+
 - name: load kubelet tasks
   include_tasks:
     file: node/kubelet.yaml
@@ -121,6 +163,8 @@
     - /tmp/ca.crt
     - /tmp/ca.key
     - /tmp/config.json
+    - /tmp/admin.crt
+    - /tmp/admin.key
   tags:
     - kubernetes
     - node
