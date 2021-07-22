@@ -1,0 +1,74 @@
+---
+# tasks file for kubernetes master - kube-scheduler
+
+- name: copy kube-scheduler certificate
+  copy:
+    src: files/certs/master/kube-scheduler/{{ item }}
+    dest: /var/lib/kubernetes/pki/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - kube-scheduler.crt
+    - kube-scheduler.key
+  tags:
+    - kubernetes
+    - master
+    - kube-scheduler
+
+- name: generate kube-scheduler configuration
+  shell: |
+    /usr/local/bin/kubectl config set-cluster {{ cluster_name }} \
+      --certificate-authority=/var/lib/kubernetes/pki/ca.crt \
+      --embed-certs=true \
+      --server=https://127.0.0.1:443 \
+      --kubeconfig=/var/lib/kubernetes/kube-scheduler/kubeconfig
+
+    /usr/local/bin/kubectl config set-credentials system:kube-scheduler \
+      --client-certificate=/var/lib/kubernetes/pki/kube-scheduler.crt \
+      --client-key=/var/lib/kubernetes/pki/kube-scheduler.key \
+      --embed-certs=true \
+      --kubeconfig=/var/lib/kubernetes/kube-scheduler/kubeconfig
+
+    /usr/local/bin/kubectl config set-context default \
+      --cluster={{ cluster_name }} \
+      --user=system:kube-scheduler \
+      --kubeconfig=/var/lib/kubernetes/kube-scheduler/kubeconfig
+
+    /usr/local/bin/kubectl config use-context default --kubeconfig=/var/lib/kubernetes/kube-scheduler/kubeconfig
+  changed_when: false
+  tags:
+    - kubernetes
+    - master
+    - kube-scheduler
+
+- name: copy kube-scheduler service file
+  template:
+    src: master/service/kube-scheduler.service.j2
+    dest: /etc/systemd/system/kube-scheduler.service
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - master
+    - kube-scheduler
+
+- name: do daemon reload
+  systemd:
+    name: kube-scheduler
+    daemon_reload: yes
+  tags:
+    - kubernetes
+    - master
+    - kube-scheduler
+
+- name: enable and restart kube-scheduler
+  systemd:
+    name: kube-scheduler
+    state: restarted
+    enabled: yes
+  tags:
+    - kubernetes
+    - master
+    - kube-scheduler

@@ -1,0 +1,34 @@
+[Unit]
+Description=etcd {{ etcd_version }}00
+Requires=network-online.target
+After=network-online.target
+Documentation=https://github.com/etcd-io/etcd
+
+[Service]
+LimitNOFILE=65536
+ExecStart=/usr/local/bin/etcd \
+  --name {{ ansible_hostname }} \
+  --cert-file=/etc/etcd/certs/server/server.crt \
+  --key-file=/etc/etcd/certs/server/server.key \
+  --peer-cert-file=/etc/etcd/certs/peer/peer.crt \
+  --peer-key-file=/etc/etcd/certs/peer/peer.key \
+  --trusted-ca-file=/etc/etcd/certs/ca/ca.crt \
+  --peer-trusted-ca-file=/etc/etcd/certs/ca/ca.crt \
+  --peer-client-cert-auth \
+  --client-cert-auth \
+  --initial-advertise-peer-urls https://{{ ansible_fqdn }}:4001 \
+  --listen-peer-urls https://{{ ansible_host }}:4001 \
+  --listen-client-urls https://{{ ansible_host }}:4000,https://127.0.0.1:4000 \
+  --advertise-client-urls https://{{ ansible_fqdn }}:4000 \
+  --initial-cluster-token armk8s \
+  --initial-cluster {% for server in vars['play_hosts'] %}{{ hostvars[server].ansible_hostname }}=https://{{ hostvars[server].ansible_fqdn }}:4001{% if not loop.last %},{% endif %}{% endfor %} \
+  --initial-cluster-state new \
+  --data-dir=/var/lib/etcd \
+  --wal-dir=/var/lib/etcd/wal/data \
+  --logger=zap \
+  --log-outputs=stdout
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

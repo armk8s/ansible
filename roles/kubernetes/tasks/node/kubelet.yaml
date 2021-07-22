@@ -1,0 +1,147 @@
+---
+# tasks file for kubernetes node - kubelet
+
+- name: copy kubelet certificate config
+  template:
+    src: node/certs/kubelet.config.json.j2
+    dest: /tmp/kubelet.config.json
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - node
+    - kubelet
+
+- name: generate kubelet certificate
+  shell: |
+    set -o pipefail && \
+    /usr/bin/cfssl gencert \
+      -ca=/tmp/ca.crt \
+      -ca-key=/tmp/ca.key \
+      -config=/tmp/config.json \
+      -profile=server \
+      /tmp/kubelet.config.json | /usr/bin/cfssljson -bare /tmp/kubelet
+  args:
+    executable: /bin/bash
+  changed_when: false
+  tags:
+    - kubernetes
+    - node
+    - kubelet
+
+- name: move kubelet certificate
+  shell: |
+    set -o pipefail && \
+    /usr/bin/mv /tmp/kubelet.pem /var/lib/kubernetes/kubelet/kubelet.crt
+    /usr/bin/mv /tmp/kubelet-key.pem /var/lib/kubernetes/kubelet/kubelet.key
+  args:
+    executable: /bin/bash
+  changed_when: false
+  tags:
+    - kubernetes
+    - node
+    - kubelet
+
+- name: generate kubelet kubeconfig
+  shell: |
+    /usr/local/bin/kubectl config set-cluster {{ cluster_name }} \
+      --certificate-authority=/tmp/ca.crt \
+      --embed-certs=true \
+      --server=https://{{ kubernetes_master_endpoint }} \
+      --kubeconfig=/var/lib/kubernetes/kubelet/kubeconfig
+
+    /usr/local/bin/kubectl config set-credentials system:node:{{ ansible_fqdn }} \
+      --client-certificate=/var/lib/kubernetes/kubelet/kubelet.crt \
+      --client-key=/var/lib/kubernetes/kubelet/kubelet.key \
+      --embed-certs=true \
+      --kubeconfig=/var/lib/kubernetes/kubelet/kubeconfig
+
+    /usr/local/bin/kubectl config set-context default \
+      --cluster={{ cluster_name }} \
+      --user=system:node:{{ ansible_fqdn }} \
+      --kubeconfig=/var/lib/kubernetes/kubelet/kubeconfig
+
+    /usr/local/bin/kubectl config use-context default --kubeconfig=/var/lib/kubernetes/kubelet/kubeconfig
+  args:
+    executable: /bin/bash
+  changed_when: false
+  tags:
+    - kubernetes
+    - node
+    - kubelet
+
+- name: copy kubelet config file
+  template:
+    src: node/kubelet/kubelet.yaml.j2
+    dest: /var/lib/kubernetes/kubelet/kubelet.yaml
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - node
+    - kubelet
+
+- name: copy kubelet service file
+  template:
+    src: node/kubelet/kubelet.service.j2
+    dest: /etc/systemd/system/kubelet.service
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - node
+    - kubelet
+
+- name: do daemon reload
+  systemd:
+    name: kubelet
+    daemon_reload: yes
+  tags:
+    - kubernetes
+    - node
+    - kubelet
+
+- name: enable and restart kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+    enabled: yes
+  tags:
+    - kubernetes
+    - node
+    - kubelet
+
+- name: label the node
+  shell: |
+    sleep 120 && \
+    /usr/local/bin/kubectl label nodes --overwrite {{ ansible_fqdn }} {{ item }}
+  with_items:
+    - "{{ node_labels }}"
+  when:
+    - node_labels
+  args:
+    executable: /bin/bash
+  changed_when: false
+  tags:
+    - kubernetes
+    - node
+    - kubelet
+
+- name: taint the node if any
+  shell: |
+    /usr/local/bin/kubectl taint nodes --overwrite {{ ansible_fqdn }} {{ item }}
+  with_items:
+    - "{{ node_taints }}"
+  when:
+    - node_taints
+  args:
+    executable: /bin/bash
+  changed_when: false
+  tags:
+    - kubernetes
+    - node
+    - kubelet
+  

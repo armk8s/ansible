@@ -1,0 +1,25 @@
+---
+# defaults file for kubernetes
+
+kubernetes_version: v1.21.2
+cluster_name: armk8s
+
+role: node
+node_labels: []
+node_taints: []
+
+cluster_cidr: 10.200.0.0/16
+service_cluster_ip_range: 10.196.0.0/16
+cluster_dns: 10.196.0.10
+
+kubernetes_master_endpoint: api.armk8s.net
+
+# etcd config
+etcd_servers:
+  - https://master1.armk8s.net:4000
+  - https://master2.armk8s.net:4000
+  - https://master3.armk8s.net:4000
+
+# node config
+cni_version: 0.4.0
+cni_plugins_version: v0.9.1

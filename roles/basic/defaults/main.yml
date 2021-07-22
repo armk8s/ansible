@@ -3,7 +3,8 @@
 
 timezone: Asia/Jakarta
 timeservers:
-  - 10.217.0.11
-  - 10.217.0.12
+  - 10.77.20.52
+  - 10.77.20.53
 
 user_password: ""
+ulimit: 150000

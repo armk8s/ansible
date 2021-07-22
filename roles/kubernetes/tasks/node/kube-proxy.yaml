@@ -1,0 +1,88 @@
+---
+# tasks file for kubernetes node - kube-proxy
+
+- name: copy kube-proxy certificate
+  copy:
+    src: files/certs/node/kube-proxy/{{ item }}
+    dest: /var/lib/kubernetes/kube-proxy/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - kube-proxy.crt
+    - kube-proxy.key
+  tags:
+    - kubernetes
+    - node
+    - kube-proxy
+
+- name: generate kube-proxy kubeconfig
+  shell: |
+    /usr/local/bin/kubectl config set-cluster {{ cluster_name }} \
+      --certificate-authority=/tmp/ca.crt \
+      --embed-certs=true \
+      --server=https://{{ kubernetes_master_endpoint }} \
+      --kubeconfig=/var/lib/kubernetes/kube-proxy/kubeconfig
+
+    /usr/local/bin/kubectl config set-credentials system:kube-proxy \
+      --client-certificate=/var/lib/kubernetes/kube-proxy/kube-proxy.crt \
+      --client-key=/var/lib/kubernetes/kube-proxy/kube-proxy.key \
+      --embed-certs=true \
+      --kubeconfig=/var/lib/kubernetes/kube-proxy/kubeconfig
+
+    /usr/local/bin/kubectl config set-context default \
+      --cluster={{ cluster_name }} \
+      --user=system:kube-proxy \
+      --kubeconfig=/var/lib/kubernetes/kube-proxy/kubeconfig
+
+    /usr/local/bin/kubectl config use-context default --kubeconfig=/var/lib/kubernetes/kube-proxy/kubeconfig
+  args:
+    executable: /bin/bash
+  changed_when: false
+  tags:
+    - kubernetes
+    - node
+    - kube-proxy
+
+- name: copy kube-proxy config file
+  template:
+    src: node/kube-proxy/kube-proxy.yaml.j2
+    dest: /var/lib/kubernetes/kube-proxy/kube-proxy.yaml
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - node
+    - kube-proxy
+
+- name: copy kube-proxy service file
+  template:
+    src: node/kube-proxy/kube-proxy.service.j2
+    dest: /etc/systemd/system/kube-proxy.service
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - kubernetes
+    - node
+    - kube-proxy
+
+- name: do daemon reload
+  systemd:
+    name: kube-proxy
+    daemon_reload: yes
+  tags:
+    - kubernetes
+    - node
+    - kube-proxy
+
+- name: enable and restart kubelet
+  systemd:
+    name: kube-proxy
+    state: restarted
+    enabled: yes
+  tags:
+    - kubernetes
+    - node
+    - kube-proxy
