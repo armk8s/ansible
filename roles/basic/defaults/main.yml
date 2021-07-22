@@ -7,3 +7,4 @@ timeservers:
   - 10.77.20.53
 
 user_password: ""
+ulimit: 150000
