@@ -2,7 +2,7 @@
     <a href="https://kubernetes.io/"><img src="https://github.com/armk8s/ansible/blob/main/images/kubernetes.png" width="100" height="73"></a>    <a href="https://www.raspberrypi.org/"><img src="https://github.com/armk8s/ansible/blob/main/images/raspberry-pi.png" width="100" height="73" ></a>    <a href="https://www.ansible.com/"><img src="https://github.com/armk8s/ansible/blob/main/images/ansible.png" width="100" height="73"></a>
 </p>
 
-# armk8s Ansible - Setup K8S in Raspberry pi
+# Ansible ArmK8S- Setup K8S in Raspberry pi
 
 How to build k8s cluster in Raspberry pi with ansible.
 
