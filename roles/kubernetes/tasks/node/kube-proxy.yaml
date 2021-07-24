@@ -77,7 +77,7 @@
     - node
     - kube-proxy
 
-- name: enable and restart kubelet
+- name: enable and restart kube-proxy
   systemd:
     name: kube-proxy
     state: restarted
