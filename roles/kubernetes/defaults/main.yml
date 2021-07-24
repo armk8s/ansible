@@ -1,7 +1,7 @@
 ---
 # defaults file for kubernetes
 
-kubernetes_version: v1.21.2
+kubernetes_version: v1.21.3
 cluster_name: armk8s
 
 role: node
