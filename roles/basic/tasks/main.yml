@@ -196,6 +196,18 @@
     - basic
     - limit
 
+- name: disable wifi and bluetooth
+  copy:
+    src: files/usercfg.txt
+    dest: /boot/firmware/usercfg.txt
+    mode: 0755
+    owner: root
+    group: root
+  tags:
+    - prepare
+    - basic
+    - radio
+
 - name: Check if a reboot is needed for Debian and Ubuntu boxes
   register: reboot_required_file
   stat:

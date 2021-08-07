@@ -178,10 +178,14 @@
 
 - name: apply kubelet-api-admin.yaml file in one master node
   shell: |
-    sleep 60 &&
+    sleep 120 &&
     /usr/local/bin/kubectl --kubeconfig /root/.kube/config apply -f /tmp/kubelet-api-admin.yaml
   changed_when: false
   run_once: true
+  register: task_result
+  until: task_result.rc == 0
+  retries: 5
+  delay: 30
   tags:
     - kubernetes
     - master

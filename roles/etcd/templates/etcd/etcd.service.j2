@@ -26,7 +26,9 @@ ExecStart=/usr/local/bin/etcd \
   --data-dir=/var/lib/etcd \
   --wal-dir=/var/lib/etcd/wal/data \
   --logger=zap \
-  --log-outputs=stdout
+  --log-outputs=stdout \
+  --heartbeat-interval=5000 \
+  --election-timeout=25000
 Restart=on-failure
 RestartSec=5
 
