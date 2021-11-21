@@ -136,7 +136,7 @@
 
 - name: Activating cgroup support
   lineinfile:
-    path: /boot/firmware/cmdline.txt
+    path: /boot/cmdline.txt
     regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
     line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1'
     backrefs: true
@@ -198,8 +198,8 @@
 
 - name: disable wifi and bluetooth
   copy:
-    src: files/usercfg.txt
-    dest: /boot/firmware/usercfg.txt
+    src: files/config.txt
+    dest: /boot/config.txt
     mode: 0755
     owner: root
     group: root
