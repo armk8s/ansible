@@ -120,6 +120,38 @@
     - basic
     - swap
 
+- name: disable swap for rpi hosts
+  shell: |
+    dphys-swapfile swapoff &&
+    dphys-swapfile uninstall &&
+    update-rc.d dphys-swapfile remove
+  ignore_errors: yes
+  tags:
+    - prepare
+    - basic
+    - swap
+
+- name: disable swap
+  systemd:
+    name: dphys-swapfile.service
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+  tags:
+    - prepare
+    - basic
+    - swap
+
+- name: remove dphys-swapfile
+  apt:
+    name: dphys-swapfile
+    state: absent
+    purge: yes
+  tags:
+    - prepre
+    - basic
+    - swap
+
 - name: Enable IPv4 forwarding
   sysctl:
     name: "{{ item }}"

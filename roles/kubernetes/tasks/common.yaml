@@ -10,6 +10,7 @@
     mode: 0755
   with_items:
     - /etc/containerd
+    - /etc/kubernetes/manifests
   tags:
     - kubernetes
     - common
@@ -82,7 +83,7 @@
 
 - name: add docker-ce apt key
   apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
+    url: https://download.docker.com/linux/debian/gpg
     keyring: /usr/share/keyrings/docker-archive-keyring.gpg
     state: present
   tags:
@@ -92,7 +93,7 @@
 
 - name: add docker-ce repository
   apt_repository:
-    repo: deb [arch=arm64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu "{{ ansible_lsb['codename'] }}" stable
+    repo: deb [arch=arm64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian "{{ ansible_lsb['codename'] }}" stable
     state: present
     filename: docker
   tags:
